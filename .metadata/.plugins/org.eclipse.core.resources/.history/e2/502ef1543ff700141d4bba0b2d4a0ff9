@@ -1,0 +1,115 @@
+/*
+ * This class contain necessary database operation e.g: update data, remove data etc... needed in application
+ */
+
+package com.csform.android.uiapptemplate;
+
+import com.rbundle.bluetoothtracker.TableData.TableInfo;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+public class DatabaseOperations extends SQLiteOpenHelper {
+
+	public static final int database_version = 1;
+	public String CREATE_QUERY = "CREATE TABLE " 
+			+ TableInfo.TABLE_NAME + "("
+			+ TableInfo.NAME + " TEXT," 
+			+ TableInfo.DEVICE_NAME + " TEXT,"
+			+ TableInfo.DEVICE_GPS_LAT+" TEXT DEFAULT '0.0',"
+			+ TableInfo.DEVICE_GPS_LONG+" TEXT DEFAULT '0.0',"
+			+ TableInfo.DEVICE_ADDRESS + " TEXT PRIMARY KEY);";
+
+	public DatabaseOperations(Context context) {
+		super(context, TableInfo.DATABASE_NAME, null, database_version);
+		Log.d("database operation","database created");
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public void onCreate(SQLiteDatabase sdb) {
+		// TODO Auto-generated method stub
+		sdb.execSQL(CREATE_QUERY);
+		Log.d("database operation","table created");
+	}
+
+	@Override
+	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		// TODO Auto-generated method stub
+
+	}
+	
+	public long putInformation(DatabaseOperations dop,String name,String device_name,String device_address)
+	{
+		try
+		{
+		SQLiteDatabase SQ=dop.getWritableDatabase();
+		ContentValues cv=new ContentValues();
+		cv.put(TableInfo.NAME, name);
+		cv.put(TableInfo.DEVICE_NAME, device_name);
+		cv.put(TableInfo.DEVICE_ADDRESS, device_address);
+		long k=SQ.insert(TableInfo.TABLE_NAME, null, cv);
+		Log.d("database operation","one row inserted");
+		return k;
+		}
+		catch(Exception ex)
+		{
+			return -1;
+		}
+	}
+	
+	public Cursor getInformation(DatabaseOperations dop)
+	{
+		SQLiteDatabase SQ=dop.getReadableDatabase();
+		String[] columns={TableInfo.NAME,TableInfo.DEVICE_NAME,TableInfo.DEVICE_ADDRESS};
+		Cursor CR=SQ.query(TableInfo.TABLE_NAME, columns, null, null, null, null, null);
+		return CR;
+	}
+	
+	public Cursor getDeviceName(DatabaseOperations dop,String device_address)
+	{
+		SQLiteDatabase SQ=dop.getReadableDatabase();
+		String selectQuery = "SELECT "+ TableInfo.NAME+" FROM "+TableInfo.TABLE_NAME+" WHERE "+TableInfo.DEVICE_ADDRESS+" = \""+device_address+"\"";
+		Cursor c = SQ.rawQuery(selectQuery,null);
+		return c;
+		
+	}
+	public void updateInformation(DatabaseOperations dop,String mac_address,String name)
+	{
+		SQLiteDatabase SQ=dop.getWritableDatabase();
+		ContentValues cv=new ContentValues();
+		cv.put(TableInfo.NAME, name);
+		long k=SQ.update(TableInfo.TABLE_NAME, cv, TableInfo.DEVICE_ADDRESS+" =\""+mac_address+"\"", null);
+	}
+	public Cursor getDevicGPS(DatabaseOperations dop,String device_address)
+	{
+		SQLiteDatabase SQ=dop.getReadableDatabase();
+		String selectQuery = "SELECT "+ TableInfo.DEVICE_GPS_LAT+","+TableInfo.DEVICE_GPS_LONG+" FROM "+TableInfo.TABLE_NAME+" WHERE "+TableInfo.DEVICE_ADDRESS+" = \""+device_address+"\"";
+		Cursor c = SQ.rawQuery(selectQuery,null);
+		return c;
+		
+	}
+	
+	
+	public void updateGPS(DatabaseOperations dop,String mac_address,String lat, String lon)
+	{
+		SQLiteDatabase SQ=dop.getWritableDatabase();
+		ContentValues cv=new ContentValues();
+		cv.put(TableInfo.DEVICE_GPS_LAT, lat);
+		cv.put(TableInfo.DEVICE_GPS_LONG,lon);
+		long k=SQ.update(TableInfo.TABLE_NAME, cv, TableInfo.DEVICE_ADDRESS+" =\""+mac_address+"\"", null);
+	}
+	
+	public void deleteInformation(DatabaseOperations dop,String mac_address)
+	{
+		SQLiteDatabase SQ=dop.getWritableDatabase();
+		long k=SQ.delete(TableInfo.TABLE_NAME, TableInfo.DEVICE_ADDRESS+"= \""+mac_address+"\"", null);
+		
+		
+	}
+
+}

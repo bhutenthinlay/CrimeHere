@@ -1,0 +1,148 @@
+package com.csform.android.uiapptemplate;
+
+import com.google.android.gms.internal.mm;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import android.content.Intent;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MapFragment extends Fragment implements OnMapLongClickListener,
+		LocationListener {
+	public static final String LOCATION_SERVICE = "location";
+
+	double lat, lon;
+	String latString, lonString;
+	String markerString;
+	LatLng latlng;
+	TextView textviewMap;
+	Boolean longpress = true;
+	LocationManager locationManager;
+
+	MapFragment(boolean longpress) {
+		this.longpress = longpress;
+	}
+
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+
+		UserSessionManager session = new UserSessionManager(getActivity());
+		View v = inflater.inflate(R.layout.map_fragment, container, false);
+
+		textviewMap = (TextView) v.findViewById(R.id.textView1);
+		GoogleMap mMap = ((SupportMapFragment) this.getChildFragmentManager()
+				.findFragmentById(R.id.mapid)).getMap();
+
+		locationManager = (LocationManager) getActivity().getSystemService(
+				LOCATION_SERVICE);
+		Location location = locationManager
+				.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		mMap.getUiSettings().setMapToolbarEnabled(false);
+
+		if (longpress) {
+			textviewMap.setText("Long press at location to report a crime");
+			mMap.setOnMapLongClickListener(this);
+			textviewMap.setText("Long press to submit a Tips");
+			markerString = "your current location";
+		}
+
+		else {
+			textviewMap.setText("Crime scene");
+			markerString = "crime scene";
+
+		}
+		if (mMap == null) {
+			Toast.makeText(getActivity(), "something wrong with google map",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			try {
+				lat = location.getLatitude();
+				lon = location.getLongitude();
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						.showInfoWindow();
+			} catch (Exception ex) {
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				lat = 24.821387;
+				lon = 78.060060;
+				markerString="unable to locate exactly";
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 6f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						.showInfoWindow();
+				
+				
+			}
+			
+		}
+
+		return v;
+	}
+
+	@Override
+	public void onMapLongClick(LatLng arg0) {
+		Intent i = new Intent(getActivity(), Add_item.class);
+		Bundle b = new Bundle();
+		b.putString("lat", String.valueOf(arg0.latitude));
+		b.putString("lon", String.valueOf(arg0.longitude));
+		i.putExtras(b);
+		startActivity(i);
+		// TODO Auto-generated method stub
+		/*
+		 * Intent i = new Intent(getActivity(), Add_item.class); Bundle bundle =
+		 * new Bundle();
+		 * 
+		 * // Add your data to bundle bundle.putString("lat",
+		 * String.valueOf(arg0.latitude)); bundle.putString("lon",
+		 * String.valueOf(arg0.longitude));
+		 * 
+		 * // Add the bundle to the intent i.putExtras(bundle);
+		 * startActivity(i); getActivity().finish();
+		 */}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

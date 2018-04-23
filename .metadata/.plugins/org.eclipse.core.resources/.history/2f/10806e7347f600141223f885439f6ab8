@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.csform.android.uiapptemplate"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="21" />
+
+    <uses-permission android:name="com.thinlay.crimehere.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.google.android.prividerr.gsf.permission.READ_GSERVICES" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:name=".MainApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <meta-data
+            android:name="com.google.android.maps.v2.API_KEY"
+            android:value="AIzaSyAnxBJ_qRbhrTBpswZl-JVAxKsVBvmLyJk" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN_ACTIVITY" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".SplashScreensActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ParallaxKenBurnsActivity"
+            android:theme="@style/AppTheme.Overlay" />
+        <activity android:name=".ParallaxActivity" />
+        <activity
+            android:name=".ImageGalleryCategoryActivity"
+            android:theme="@style/AppTheme.NoShadow" />
+        <activity
+            android:name=".ImageGallerySubcategoryActivity"
+            android:theme="@style/AppTheme.NoShadow" />
+        <activity android:name=".LogInPageActivity" />
+        <activity android:name=".ListViewsActivity" />
+        <activity
+            android:name=".LeftMenusActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".SearchBarsActivity" />
+        <activity android:name=".GoogleCardsActivity" />
+        <activity android:name=".ExpandableListViewActivity" />
+        <activity android:name=".StickyListHeadersActivity" />
+        <activity
+            android:name=".Add_item"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+        <activity android:name=".CustomPhotoGalleryActivity" />
+        <activity
+            android:name=".Map"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+        <activity
+            android:name=".LoggedIn"
+            android:launchMode="singleTop" >
+             >
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+    </application>
+
+</manifest>

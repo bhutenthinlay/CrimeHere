@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:com.brianco.andypedia="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/search"
+        android:actionProviderClass="android.support.v7.widget.ShareActionProvider"
+        android:icon="@android:drawable/ic_menu_search"
+        android:showAsAction="ifRoom"
+        android:title="Action Bar Search"
+        com.brianco.andypedia:actionViewClass="android.support.v7.widget.SearchView"
+        com.brianco.andypedia:showAsAction="always|collapseActionView">
+        
+    </item>
+
+</menu>

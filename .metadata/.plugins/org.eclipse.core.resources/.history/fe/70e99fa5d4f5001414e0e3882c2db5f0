@@ -1,0 +1,29 @@
+package com.csform.android.uiapptemplate;
+
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBarActivity;
+
+public class Map extends FragmentActivity{
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.map_activity);
+        Bundle bundle = getIntent().getExtras();
+
+		// Extract the data…
+		String lat = bundle.getString("lat");
+		String lon = bundle.getString("lon");
+		Boolean longpress=bundle.getBoolean("longpress");
+		MapFragment mf=new MapFragment(lat,lon,longpress);
+        FragmentManager manager=getSupportFragmentManager();
+        FragmentTransaction transaction=manager.beginTransaction();
+        transaction.add(R.id.main_activity, mf,"mapfragment");
+        transaction.commit();
+       
+    }
+}
+    

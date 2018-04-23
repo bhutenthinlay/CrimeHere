@@ -1,0 +1,47 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" 
+     android:id="@+id/map_category">
+
+    <include layout="@layout/toolbar" />
+ <tabs.SlidingTabLayout
+        android:id="@+id/tabsCategory"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        >
+
+    </tabs.SlidingTabLayout>
+
+    
+    <android.support.v4.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/drawer_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+        <android.support.v4.view.ViewPager
+        android:id="@+id/pagerCategory"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+       
+        
+
+        </android.support.v4.view.ViewPager>
+
+        <FrameLayout
+            android:id="@+id/content_frameCategory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+            
+        </FrameLayout>
+
+        <include
+            android:layout_width="@dimen/drawer_width"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            layout="@layout/list_view" />
+        
+    </android.support.v4.widget.DrawerLayout>
+
+</LinearLayout>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+      android:background="@drawable/login_background_light"
+ 
+    >
+
+    <GridView
+        android:id="@+id/grdImages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:columnWidth="90dp"
+        android:gravity="center"
+        android:horizontalSpacing="10dp"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="10dp" >
+    </GridView>
+    
+    
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:padding="20dp" >
+  <com.csform.android.uiapptemplate.view.MaterialRippleLayout
+            style="@style/RippleStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="3dp"
+            app:rippleColor="@color/main_color_grey_400" >
+
+            <com.csform.android.uiapptemplate.font.RobotoTextView
+                android:id="@+id/btnSelect"
+                style="@style/ButtonStyle.RaisedEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="0dp"
+                android:background="@color/main_color_500"
+                android:minWidth="112dp"
+                android:text="Select"
+                android:textColor="#fff" />
+        </com.csform.android.uiapptemplate.view.MaterialRippleLayout>
+            
+        </LinearLayout>
+    
+  
+</LinearLayout>

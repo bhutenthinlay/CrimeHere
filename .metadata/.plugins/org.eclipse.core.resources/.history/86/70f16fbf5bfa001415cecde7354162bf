@@ -1,0 +1,887 @@
+package com.csform.android.uiapptemplate;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.csform.android.uiapptemplate.view.FloatLabeledEditText;
+
+import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.provider.MediaStore.Images;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class Add_item extends ActionBarActivity implements
+		View.OnClickListener, android.widget.AdapterView.OnItemSelectedListener {
+
+	static String response;
+	private static final int CAM_REQUEST = 2;
+	static Boolean dialogboxShow;
+	int no_of_image;;
+	Bitmap[] bitmap;
+	String[] imagesPath;
+	String lon;
+	String lat;
+	com.csform.android.uiapptemplate.view.FloatLabeledEditText title, address,
+			descEditText, others;
+
+	private LinearLayout linearLayoutImage;
+
+	private ArrayList<String> imagesPathList;
+	private Bitmap yourbitmap;
+	private Bitmap resized;
+	private final int PICK_IMAGE_MULTIPLE = 1;
+	ProgressBar progressBar;
+	private Spinner spinner;
+	com.csform.android.uiapptemplate.font.RobotoTextView imageButtonTakePic,
+			imageButtonGallery, buttonSubmit;
+
+	UserSessionManager session;
+	private String fullAdress;
+	static String filePath;
+	static String areaName;
+	static String cityName;
+	static String stateName;
+	static String countryName;
+	static String full_address;
+	static LocationManager location_manager;
+	static LocationListener listner;
+
+	static List<Address> addresses;
+	static Location loc;
+
+	static Geocoder geocoder;
+	ArrayAdapter<String> adapter;
+	static private ArrayList<HashMap<String, String>> mylist;
+	com.csform.android.uiapptemplate.view.FloatLabeledEditText editText1,editText2,editText3;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		// requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+
+		setProgressBarIndeterminateVisibility(false);
+		setContentView(R.layout.add_item);
+		
+		editText1=(FloatLabeledEditText) findViewById(R.id.editTextImagePath1);
+		editText2=(FloatLabeledEditText) findViewById(R.id.editTextImagePath2);
+		editText3=(FloatLabeledEditText) findViewById(R.id.editTextImagePath3);
+		editText1.setFocusable(false);
+		editText2.setFocusable(false);
+		editText3.setFocusable(false);
+		
+		mylist = new ArrayList<HashMap<String, String>>();
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		location_manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		listner = new MyLocationListner();
+		location_manager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+				10000, 10, listner);
+		location_manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		// setProgressBarIndeterminateVisibility(false);
+		dialogboxShow = true;
+		session = new UserSessionManager(getApplicationContext());
+		Bundle bundle = getIntent().getExtras();
+
+		// Extract the data…
+		lon = bundle.getString("lon");
+		lat = bundle.getString("lat");
+
+		progressBar = (ProgressBar) findViewById(R.id.progressBarAddCrime);
+		linearLayoutImage = (LinearLayout) findViewById(R.id.linearLayoutForImages);
+		imageButtonGallery = (com.csform.android.uiapptemplate.font.RobotoTextView) findViewById(R.id.imageButtonGallery);
+		imageButtonTakePic = (com.csform.android.uiapptemplate.font.RobotoTextView) findViewById(R.id.imageButtonCamera);
+		buttonSubmit = (com.csform.android.uiapptemplate.font.RobotoTextView) findViewById(R.id.buttonSubmit);
+		title = (com.csform.android.uiapptemplate.view.FloatLabeledEditText) findViewById(R.id.editTextTitle);
+		address = (com.csform.android.uiapptemplate.view.FloatLabeledEditText) findViewById(R.id.editTextAddress);
+		descEditText = (com.csform.android.uiapptemplate.view.FloatLabeledEditText) findViewById(R.id.editTextDescription);
+		title.requestFocus();
+		imageButtonGallery.setOnClickListener(this);
+		imageButtonTakePic.setOnClickListener(this);
+		buttonSubmit.setOnClickListener(this);
+		spinner = (Spinner) findViewById(R.id.spinnerCategory);
+		List<String> spinnerArray = new ArrayList<String>();
+		for (int i = 0; i < MapFragment.mylist.size(); i++) {
+			spinnerArray.add(MapFragment.mylist.get(i).get("type_name"));
+		}
+
+		adapter = new ArrayAdapter<String>(getApplicationContext(),
+				R.layout.my_spinner_style, spinnerArray) {
+
+			public View getView(int position, View convertView, ViewGroup parent) {
+
+				View v = super.getView(position, convertView, parent);
+
+				((TextView) v).setTextSize(16);
+
+				return v;
+
+			}
+
+			public View getDropDownView(int position, View convertView,
+					ViewGroup parent) {
+
+				View v = super.getDropDownView(position, convertView, parent);
+
+				((TextView) v).setGravity(Gravity.LEFT);
+
+				return v;
+
+			}
+
+		};
+
+		spinner.setAdapter(adapter);
+
+		spinner.setOnItemSelectedListener(this);
+		// others = (com.csform.android.uiapptemplate.view.FloatLabeledEditText)
+		// findViewById(R.id.editCategoryOther);
+
+		setProgressBarIndeterminateVisibility(false);
+		try {
+			geocoder = new Geocoder(getApplicationContext(), Locale.ENGLISH);
+			addresses = geocoder.getFromLocation(Double.valueOf(lat),
+					Double.valueOf(lon), 1);
+			new StringBuilder();
+			if (geocoder.isPresent()) {
+				addresses.get(0);
+
+				String address1 = addresses.get(0).getAddressLine(0);
+				if (address1 == null) {
+					address1 = "";
+				}
+				String address2 = addresses.get(0).getAddressLine(1);
+				if (address2 == null) {
+					address2 = "";
+				}
+				String city = addresses.get(0).getLocality();
+				if (city == null) {
+					city = "";
+				}
+				String state = addresses.get(0).getAdminArea();
+				if (state == null) {
+					state = "";
+				}
+				String country = addresses.get(0).getCountryName();
+				if (country == null) {
+					country = "";
+				}
+				String postalCode = addresses.get(0).getPostalCode();
+				if (postalCode == null) {
+					postalCode = "";
+				}
+				fullAdress = address1 + ", " + address2 + ", " + city + ", "
+						+ state + ", " + country + " " + postalCode;
+				if (fullAdress.trim().length() == 0) {
+					String knownName = addresses.get(0).getFeatureName();
+					fullAdress = knownName;
+				}
+				Add_item.this.address.setText(fullAdress);
+
+			}
+
+		} catch (IOException e) {
+		}
+
+		// dropdown.setOnItemSelectedListener(this);
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		dialogboxShow = true;
+		Log.e("on Resume", "onResume......");
+		location_manager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+				3000, 10, listner);
+		location_manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	}
+
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		dialogboxShow = false;
+		Log.e("on pause", "onPause......");
+		location_manager.removeUpdates(listner);
+	}
+
+	@Override
+	public void onClick(View view) {
+		if (view.getId() == R.id.imageButtonGallery) {
+			Intent intent = new Intent(Add_item.this,
+					CustomPhotoGalleryActivity.class);
+			startActivityForResult(intent, PICK_IMAGE_MULTIPLE);
+		} else if (view.getId() == R.id.imageButtonCamera) {
+
+			Intent cameraIntent = new Intent(
+					android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+			startActivityForResult(cameraIntent, CAM_REQUEST);
+
+		} else if (view.getId() == R.id.buttonSubmit) {
+
+			String stringTitle = title.getTextString().trim();
+			String stringCrimeType = String
+					.valueOf(spinner.getSelectedItemId() + 1);
+			String stringDescription = descEditText.getTextString().trim();
+			String stringAddress = address.getTextString().trim();
+
+			setProgressBarIndeterminateVisibility(true);
+
+			String image0 = null;
+			String image1 = null;
+			String image2 = null;
+			try {
+				image0 = mylist.get(0).get("url");
+			} catch (Exception ex) {
+				image0 = null;
+			}
+			try {
+				image1 = mylist.get(1).get("url");
+			} catch (Exception ex) {
+				image1 = null;
+			}
+			try {
+				image2 = mylist.get(2).get("url");
+			} catch (Exception ex) {
+				image2 = null;
+			}
+
+			addCrime(stringTitle, stringCrimeType, stringDescription,
+					stringAddress, image0, image1, image2);
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode == RESULT_OK && requestCode == CAM_REQUEST) {
+
+			Bitmap photo = (Bitmap) data.getExtras().get("data");
+			imagesPathList = new ArrayList<String>();
+			imagesPath = new String[1];
+			Uri tempUri = getImageUri(getApplicationContext(), photo);
+
+			// CALL THIS METHOD TO GET THE ACTUAL PATH
+			File finalFile = new File(getRealPathFromURI(tempUri));
+
+			filePath = finalFile.toString();
+			Log.e("path", finalFile.toString());
+
+			try {
+				linearLayoutImage.removeAllViews();
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+			imagesPathList.add(filePath);
+			imagesPath[0] = filePath;
+			ImageView imageView = new ImageView(getApplicationContext());
+			resized = Bitmap.createScaledBitmap(photo, 200, 300, true);
+			imageView.setImageBitmap(resized);
+
+			imageView.setAdjustViewBounds(true);
+			linearLayoutImage.addView(imageView);
+			if (imagesPathList != null) {
+
+				MultipartEntity multipartEntity = new MultipartEntity();
+
+				File image0f, image1f, image2f;
+				FileBody image0b, image1b, image2b;
+				switch (imagesPathList.size()) {
+				case 0:
+
+					break;
+
+				case 1:
+
+					image0f = new File(imagesPathList.get(0));
+					image0b = new FileBody(image0f, "images/jpeg");
+					multipartEntity.addPart("image", image0b);
+					break;
+
+				case 2:
+
+					image0f = new File(imagesPathList.get(0));
+					image0b = new FileBody(image0f, "images/jpeg");
+					multipartEntity.addPart("image", image0b);
+
+					image1f = new File(imagesPathList.get(1));
+					image1b = new FileBody(image1f, "images/jpeg");
+					multipartEntity.addPart("image1", image1b);
+
+					break;
+
+				case 3:
+
+					image0f = new File(imagesPathList.get(0));
+					image0b = new FileBody(image0f, "images/jpeg");
+					multipartEntity.addPart("image", image0b);
+
+					image1f = new File(imagesPathList.get(1));
+					image1b = new FileBody(image1f, "images/jpeg");
+					multipartEntity.addPart("image1", image1b);
+
+					image2f = new File(imagesPathList.get(2));
+					image2b = new FileBody(image2f, "images/jpeg");
+					multipartEntity.addPart("image2", image2b);
+
+					break;
+
+				default:
+					break;
+				}
+
+				String URL = getResources().getString(R.string.URL_ADD_IMAGE);
+				addImage(URL, multipartEntity);
+			}
+			/*
+			 * if (imagesPathList.size() > 0) { no_of_image =
+			 * imagesPathList.size(); bitmap = new Bitmap[no_of_image];
+			 * 
+			 * File image0f = new File(imagesPathList.get(0)); FileBody image0b
+			 * = new FileBody(image0f, "images/jpeg");
+			 * multipartEntity.addPart("image[" + 0 + "]", image0b);
+			 * 
+			 * File image1f = new File(imagesPathList.get(1)); FileBody image1b
+			 * = new FileBody(image1f, "images/jpeg");
+			 * multipartEntity.addPart("image[" + 1 + "]", image1b);
+			 * 
+			 * File image2f = new File(imagesPathList.get(2)); FileBody image2b
+			 * = new FileBody(image2f, "images/jpeg");
+			 * multipartEntity.addPart("image[" + 2 + "]", image2b);
+			 * 
+			 * String URL = getResources().getString( R.string.URL_ADD_IMAGE);
+			 * addImage(URL, multipartEntity);
+			 * 
+			 * } } else { no_of_image = 0;
+			 * 
+			 * // Toast.makeText(Add_item.this," no images are selected", //
+			 * Toast.LENGTH_SHORT).show(); }
+			 */
+			// addCrime(stringTitle,
+			// stringCrimeType,stringDescription,stringAddress,image0,image1,image2);
+
+		} else if (resultCode == RESULT_OK) {
+			if (requestCode == PICK_IMAGE_MULTIPLE) {
+				imagesPathList = new ArrayList<String>();
+				imagesPath = data.getStringExtra("data").split("\\|");
+				try {
+					linearLayoutImage.removeAllViews();
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+				for (int i = 0; i < imagesPath.length; i++) {
+					imagesPathList.add(imagesPath[0]);
+					yourbitmap = BitmapFactory.decodeFile(imagesPath[i]);
+					resized = Bitmap.createScaledBitmap(yourbitmap, 200, 300,
+							true);
+					ImageView imageView = new ImageView(this);
+					imageView.setImageBitmap(resized);
+					imageView.setAdjustViewBounds(true);
+					imageView.setPadding(4, 4, 4, 4);
+					linearLayoutImage.addView(imageView);
+				}
+				if (imagesPathList != null) {
+
+					MultipartEntity multipartEntity = new MultipartEntity();
+
+					File image0f, image1f, image2f;
+					FileBody image0b, image1b, image2b;
+					switch (imagesPathList.size()) {
+					case 0:
+
+						break;
+
+					case 1:
+
+						image0f = new File(imagesPathList.get(0));
+						image0b = new FileBody(image0f, "images/jpeg");
+						multipartEntity.addPart("image", image0b);
+						break;
+
+					case 2:
+
+						image0f = new File(imagesPathList.get(0));
+						image0b = new FileBody(image0f, "images/jpeg");
+						multipartEntity.addPart("image", image0b);
+
+						image1f = new File(imagesPathList.get(1));
+						image1b = new FileBody(image1f, "images/jpeg");
+						multipartEntity.addPart("image1", image1b);
+
+						break;
+
+					case 3:
+
+						image0f = new File(imagesPathList.get(0));
+						image0b = new FileBody(image0f, "images/jpeg");
+						multipartEntity.addPart("image", image0b);
+
+						image1f = new File(imagesPathList.get(1));
+						image1b = new FileBody(image1f, "images/jpeg");
+						multipartEntity.addPart("image1", image1b);
+
+						image2f = new File(imagesPathList.get(2));
+						image2b = new FileBody(image2f, "images/jpeg");
+						multipartEntity.addPart("image2", image2b);
+
+						break;
+
+					default:
+						break;
+					}
+
+					String URL = getResources().getString(
+							R.string.URL_ADD_IMAGE);
+					addImage(URL, multipartEntity);
+				}
+				/*
+				 * if (imagesPathList.size() > 0) { no_of_image =
+				 * imagesPathList.size(); bitmap = new Bitmap[no_of_image];
+				 * 
+				 * File image0f = new File(imagesPathList.get(0)); FileBody
+				 * image0b = new FileBody(image0f, "images/jpeg");
+				 * multipartEntity.addPart("image[" + 0 + "]", image0b);
+				 * 
+				 * File image1f = new File(imagesPathList.get(1)); FileBody
+				 * image1b = new FileBody(image1f, "images/jpeg");
+				 * multipartEntity.addPart("image[" + 1 + "]", image1b);
+				 * 
+				 * File image2f = new File(imagesPathList.get(2)); FileBody
+				 * image2b = new FileBody(image2f, "images/jpeg");
+				 * multipartEntity.addPart("image[" + 2 + "]", image2b);
+				 * 
+				 * String URL = getResources().getString(
+				 * R.string.URL_ADD_IMAGE); addImage(URL, multipartEntity);
+				 * 
+				 * } } else { no_of_image = 0;
+				 * 
+				 * // Toast.makeText(Add_item.this," no images are selected", //
+				 * Toast.LENGTH_SHORT).show(); }
+				 */
+				// addCrime(stringTitle,
+				// stringCrimeType,stringDescription,stringAddress,image0,image1,image2);
+
+			}
+
+		}
+
+	}
+
+	public Uri getImageUri(Context inContext, Bitmap inImage) {
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+		String path = Images.Media.insertImage(inContext.getContentResolver(),
+				inImage, "Title", null);
+		return Uri.parse(path);
+	}
+
+	public String getRealPathFromURI(Uri uri) {
+		Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+		cursor.moveToFirst();
+		int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+		return cursor.getString(idx);
+	}
+
+	@Override
+	public void onItemSelected(AdapterView<?> parent, View view, int position,
+			long id) {
+		// TODO Auto-generated method stub
+		/*
+		 * if (position == 4) { others.setVisibility(View.VISIBLE); } else {
+		 * others.setVisibility(View.INVISIBLE); }
+		 */
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> parent) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public class MyLocationListner implements LocationListener {
+
+		private String fullAdress;
+
+		@SuppressWarnings("static-access")
+		@Override
+		public void onLocationChanged(Location location) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			// TODO Auto-generated method stub
+
+		}
+	}
+
+	private void addImage(final String url,
+			final MultipartEntity multipartEntity) {
+		// TODO Auto-generated method stub
+		new AsyncTask<Void, Long, Boolean>() {
+
+			Boolean status;
+			String url;
+
+			protected void onPreExecute() {
+
+				progressBar.setVisibility(View.VISIBLE);
+				url = getResources().getString(R.string.URL_ADD_IMAGE);
+
+			};
+
+			protected void onPostExecute(Boolean result) {
+
+				progressBar.setVisibility(View.INVISIBLE);
+				if (result) {
+
+					try{
+					editText1.setText(mylist.get(0).get("url"));
+					}catch(Exception ex)
+					{
+						editText1.setText("");
+					}
+					
+
+					try{
+					editText2.setText(mylist.get(1).get("url"));
+					}catch(Exception ex)
+					{
+						editText2.setText("");
+					}
+
+
+					try{
+					editText3.setText(mylist.get(2).get("url"));
+					}catch(Exception ex)
+					{
+						editText3.setText("");
+					}
+
+				} else {
+				}
+
+			};
+
+			@Override
+			protected Boolean doInBackground(Void... added_item) {
+				// TODO Auto-generated method stub
+				status = retrieveDataImage(url, multipartEntity);
+				return status;
+			}
+
+		}.execute(null, null, null);
+
+	}
+
+	protected Boolean retrieveDataImage(final String url,
+			MultipartEntity multipartEntity) {
+		// TODO Auto-generated method stub
+
+		HttpClient client = new DefaultHttpClient();
+
+		HttpPost post = new HttpPost(url);
+		UserSessionManager session = new UserSessionManager(
+				getApplicationContext());
+		String token = session.getToken();
+		String id = session.getID();
+		post.setHeader("Authorization", token);
+		post.setHeader("id", id);
+		post.setEntity(multipartEntity);
+		HttpResponse response = null;
+		try {
+			response = client.execute(post);
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		HttpEntity resEntity = response.getEntity();
+		String json = null;
+		if (response.getStatusLine().getStatusCode() == 200) {
+			HttpEntity entity = response.getEntity();
+			try {
+				json = EntityUtils.toString(entity);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		JSONArray jArray = null;
+		try {
+			jArray = new JSONArray(json);
+		} catch (JSONException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		if (jArray.length() < 1) {
+			return false;
+		} else {
+
+			for (int i = 0; i < jArray.length(); i++) {
+				HashMap<String, String> map = new HashMap<String, String>();
+				JSONObject e = null;
+				try {
+					e = jArray.getJSONObject(i);
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				try {
+					map.put("url", e.getString("url"));
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				try {
+					map.put("name", e.getString("name"));
+				} catch (JSONException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				mylist.add(map);
+			}
+
+			return true;
+		}
+	}
+
+	private void addCrime(final String stringTitle,
+			final String stringCrimeType, final String stringDescription,
+			final String stringAddress, final String image0,
+			final String image1, final String image2) {
+		// TODO Auto-generated method stub
+		new AsyncTask<Void, Long, Boolean>() {
+
+			Boolean status;
+			String url;
+
+			protected void onPreExecute() {
+
+				progressBar.setVisibility(View.VISIBLE);
+				url = getResources().getString(R.string.URL_ADD_CRIME);
+
+			};
+
+			protected void onPostExecute(Boolean result) {
+
+				progressBar.setVisibility(View.INVISIBLE);
+				if (result) {
+
+					Toast.makeText(getApplicationContext(),
+							"Added successfully...", 0).show();
+					startActivity(new Intent(getApplicationContext(),
+							LeftMenusActivity.class));
+					finish();
+				} else {
+					Toast.makeText(getApplicationContext(),
+							"Access denied...can not add crime anymore", 0)
+							.show();
+				}
+
+			};
+
+			@Override
+			protected Boolean doInBackground(Void... added_item) {
+				// TODO Auto-generated method stub
+				status = retrieveData(url, stringTitle, stringCrimeType,
+						stringDescription, stringAddress, image0, image1,
+						image2);
+				return status;
+			}
+
+		}.execute(null, null, null);
+
+	}
+
+	protected Boolean retrieveData(final String url, final String stringTitle,
+			final String stringCrimeType, final String stringDescription,
+			final String stringAddress, final String image0,
+			final String image1, final String image2) {
+		// TODO Auto-generated method stub
+
+		HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+
+		DefaultHttpClient client = new DefaultHttpClient();
+
+		SchemeRegistry registry = new SchemeRegistry();
+		SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
+		socketFactory
+				.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
+		registry.register(new Scheme("https", socketFactory, 443));
+		SingleClientConnManager mgr = new SingleClientConnManager(
+				client.getParams(), registry);
+		DefaultHttpClient httpClient = new DefaultHttpClient(mgr,
+				client.getParams());
+
+		// Set verifier
+		HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+		HttpEntity httpEntity = null;
+		try {
+
+			final List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new BasicNameValuePair("title", String
+					.valueOf(stringTitle)));
+			params.add(new BasicNameValuePair("description", String
+					.valueOf(stringDescription)));
+
+			params.add(new BasicNameValuePair("address", String
+					.valueOf(stringAddress)));
+			params.add(new BasicNameValuePair("lat", String.valueOf(lat)));
+			params.add(new BasicNameValuePair("lng", String.valueOf(lon)));
+			params.add(new BasicNameValuePair("image0", String.valueOf(image0)));
+			params.add(new BasicNameValuePair("image1", String.valueOf(image1)));
+			params.add(new BasicNameValuePair("image2", String.valueOf(image2)));
+			params.add(new BasicNameValuePair("type", String
+					.valueOf(stringCrimeType)));
+			HttpPost httpPost = new HttpPost(url);
+			httpPost.setEntity(new UrlEncodedFormEntity(params));
+			UserSessionManager session = new UserSessionManager(
+					getApplicationContext());
+			String token = session.getToken();
+			String id = session.getID();
+			httpPost.setHeader("Authorization", token);
+			httpPost.setHeader("id", id);
+			HttpResponse httpResponse = httpClient.execute(httpPost);
+			httpEntity = httpResponse.getEntity();
+			String entityResponse = EntityUtils.toString(httpEntity);
+			Log.e("entity response", entityResponse);
+
+			JSONObject json = new JSONObject(entityResponse);
+
+				return true;
+
+		} catch (Exception ex) {
+			return false;
+		}
+		/*
+		 * SSLContext ctx = null; try { ctx = SSLContext.getInstance("TLS"); }
+		 * catch (NoSuchAlgorithmException e) { // TODO Auto-generated catch
+		 * block e.printStackTrace(); } try { ctx.init(null, new TrustManager[]
+		 * { new X509TrustManager() { public void
+		 * checkClientTrusted(X509Certificate[] chain, String authType) { }
+		 * 
+		 * public void checkServerTrusted(X509Certificate[] chain, String
+		 * authType) { }
+		 * 
+		 * public X509Certificate[] getAcceptedIssuers() { return new
+		 * X509Certificate[] {}; } } }, null); } catch (KeyManagementException
+		 * e) { // TODO Auto-generated catch block e.printStackTrace(); }
+		 * HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier()
+		 * {
+		 * 
+		 * @Override public boolean verify(String hostname, SSLSession session)
+		 * { // TODO Auto-generated method stub return true; }
+		 * 
+		 * });
+		 * 
+		 * HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+		 * HttpEntity httpEntity = null; // TODO Auto-generated method stub try
+		 * {
+		 * 
+		 * final List<NameValuePair> params = new ArrayList<NameValuePair>();
+		 * params.add(new BasicNameValuePair("User_Phone",
+		 * String.valueOf(stringPhone))); params.add(new
+		 * BasicNameValuePair("User_Passwd", String.valueOf(stringPassword)));
+		 * HttpPost httpPost = new HttpPost(url); httpPost.setEntity(new
+		 * UrlEncodedFormEntity(params)); DefaultHttpClient httpClient = new
+		 * DefaultHttpClient(); HttpResponse httpResponse =
+		 * httpClient.execute(httpPost); httpEntity = httpResponse.getEntity();
+		 * String entityResponse = EntityUtils.toString(httpEntity);
+		 * Log.e("entity response", entityResponse);
+		 * 
+		 * 
+		 * JSONObject json=new JSONObject(entityResponse);
+		 * 
+		 * if(json.getString("Status").equalsIgnoreCase("Success")) {
+		 * 
+		 * UserSessionManager session=new
+		 * UserSessionManager(getApplicationContext());
+		 * session.setID(json.getString("Id"));
+		 * session.setToken(json.getString("Token")); return true; } else {
+		 * return false; }
+		 * 
+		 * } catch (Exception ex) { ex.printStackTrace(); return false;
+		 * 
+		 * }
+		 */
+	}
+
+}

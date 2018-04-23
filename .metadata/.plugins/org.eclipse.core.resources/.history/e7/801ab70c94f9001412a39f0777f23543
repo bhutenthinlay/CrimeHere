@@ -1,0 +1,162 @@
+package com.csform.android.uiapptemplate;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MapCategoryFragment extends Fragment implements 
+		LocationListener {
+	public static final String LOCATION_SERVICE = "location";
+
+	double lat, lon;
+	String latString, lonString;
+	String markerString;
+	LatLng latlng;
+	TextView textviewMap;
+	Boolean longpress = true;
+	LocationManager locationManager;
+
+	ProgressBar progressBarMapFragmentDetail;
+	Spinner spiner;
+	static public ArrayList<HashMap<String, String>> mylist;
+	MapCategoryFragment(boolean longpress) {
+		this.longpress = longpress;
+		
+	}
+
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		
+
+		
+		mylist = new ArrayList<HashMap<String, String>>();
+		UserSessionManager session = new UserSessionManager(getActivity());
+		View v = inflater.inflate(R.layout.map_category_fragment, container, false);
+		progressBarMapFragmentDetail = (ProgressBar) v
+				.findViewById(R.id.progressBarMapFragmentDetailCategory);
+		
+		spiner=(Spinner) v.findViewById(R.id.spinnerCategory);
+		final GoogleMap mMap = ((SupportMapFragment) this.getChildFragmentManager()
+				.findFragmentById(R.id.map_category)).getMap();
+
+		locationManager = (LocationManager) getActivity().getSystemService(
+				LOCATION_SERVICE);
+		Location location = locationManager
+				.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		mMap.getUiSettings().setMapToolbarEnabled(false);
+
+		if (longpress) {
+		
+			
+			
+			markerString = "your current location";
+		}
+
+		else {
+			
+			markerString = "crime scene";
+
+		}
+		if (mMap == null) {
+			Toast.makeText(getActivity(), "something wrong with google map",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			try {
+				lat = location.getLatitude();
+				lon = location.getLongitude();
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						;
+			} catch (Exception ex) {
+				
+				try
+				{
+					 mMap.setMyLocationEnabled(true);
+			            // Check if we were successful in obtaining the map.
+			            if (mMap != null) {
+
+
+			             mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+
+			           @Override
+			           public void onMyLocationChange(Location arg0) {
+			            // TODO Auto-generated method stub
+
+			        	   lat=arg0.getLatitude();
+			        	   lon=arg0.getLongitude();
+			        	   latlng=new LatLng(lat, lon);
+			             mMap.addMarker(new MarkerOptions().position(new LatLng(arg0.getLatitude(), arg0.getLongitude())).title("My current Location"));
+			             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f));
+			           }
+			          });
+			            }
+					
+				}catch(Exception ex1)
+				{
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				lat = 24.821387;
+				lon = 78.060060;
+				markerString="unable to locate exactly";
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 6f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						;
+				
+				}
+			}
+			
+		}
+
+		return v;
+	}
+
+	
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

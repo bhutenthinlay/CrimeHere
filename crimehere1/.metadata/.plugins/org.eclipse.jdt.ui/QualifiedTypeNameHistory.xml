@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.LogInPageActivity"/>
+<fullyQualifiedTypeName name="android.content.Intent"/>
+<fullyQualifiedTypeName name="android.support.v7.app.ActionBarActivity"/>
+<fullyQualifiedTypeName name="android.app.Fragment"/>
+<fullyQualifiedTypeName name="android.app.FragmentManager"/>
+<fullyQualifiedTypeName name="android.support.v7.widget.Toolbar"/>
+<fullyQualifiedTypeName name="android.graphics.Color"/>
+<fullyQualifiedTypeName name="android.R"/>
+<fullyQualifiedTypeName name="android.support.v7.appcompat.R"/>
+<fullyQualifiedTypeName name="android.R.layout"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.R"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.R.layout"/>
+<fullyQualifiedTypeName name="android.widget.LinearLayout"/>
+<fullyQualifiedTypeName name="fragments.AllNewsFragment"/>
+<fullyQualifiedTypeName name="fragments.MyNewsFragment"/>
+<fullyQualifiedTypeName name="android.support.v4.app.FragmentPagerAdapter"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.MyFragment"/>
+<fullyQualifiedTypeName name="android.view.MenuInflater"/>
+<fullyQualifiedTypeName name="android.app.SearchManager"/>
+<fullyQualifiedTypeName name="android.support.v7.widget.SearchView"/>
+<fullyQualifiedTypeName name="android.content.Context"/>
+<fullyQualifiedTypeName name="org.apache.http.impl.EnglishReasonPhraseCatalog"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.LoggedIn"/>
+<fullyQualifiedTypeName name="android.support.v4.view.MenuItemCompat"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.R.id"/>
+<fullyQualifiedTypeName name="android.media.audiofx.BassBoost.Settings"/>
+<fullyQualifiedTypeName name="android.location.Location"/>
+<fullyQualifiedTypeName name="android.support.v4.app.FragmentManager"/>
+<fullyQualifiedTypeName name="com.csform.android.uiapptemplate.MainActivity"/>
+</qualifiedTypeNameHistroy>

@@ -1,0 +1,106 @@
+/*
+ * Copyright 2014 Niek Haarman
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.csform.android.uiapptemplate;
+
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
+import android.support.v4.app.Fragment;
+import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import com.csform.android.uiapptemplate.adapter.MyStickyListHeadersAdapter;
+import com.nhaarman.listviewanimations.appearance.StickyListHeadersAdapterDecorator;
+import com.nhaarman.listviewanimations.appearance.simple.AlphaInAnimationAdapter;
+import com.nhaarman.listviewanimations.util.StickyListHeadersListViewWrapper;
+
+public class StickyListHeadersActivity extends Fragment {
+
+	static AlphaInAnimationAdapter animationAdapter;
+	static StickyListHeadersAdapterDecorator stickyListHeadersAdapterDecorator;
+	static StickyListHeadersListView listView;
+	public static  MyStickyListHeadersAdapter adapter;
+	double top,bottom,left,right;
+	StickyListHeadersActivity(double bottom,double top,double left,double right)
+	{
+		this.bottom=bottom;
+		this.top=top;
+		this.left=left;
+		this.right=right;
+	}
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		LinearLayout wrapper = new LinearLayout(getActivity());
+		inflater.inflate(R.layout.activity_stickylistheaders, wrapper, true);
+		 listView = (StickyListHeadersListView)wrapper.findViewById(R.id.activity_stickylistheaders_listview);
+		Log.i("hihihihih", "boo hoo");
+		listView.setFitsSystemWindows(true);
+		 Bundle arguments = getArguments();
+		    if(arguments != null)
+		    {
+		    	Log.i("hihihihih", String.valueOf(GoogleMapFragment.bottom));
+		    }
+		
+		 adapter = new MyStickyListHeadersAdapter(
+				super.getActivity(),bottom,top,left,right);
+		
+		return wrapper;
+	}
+		
+	
+	public static StickyListHeadersActivity newInstance(double bottom,double top,double left,double right) {
+		StickyListHeadersActivity fragment = new StickyListHeadersActivity(bottom, top, left, right);
+		
+		return fragment;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == android.R.id.home) {
+			super.getActivity().finish();
+			return true;
+		}
+		Toast.makeText(getActivity(), "touched", 0).show();
+		return super.onOptionsItemSelected(item);
+	}
+	public void init(MyStickyListHeadersAdapter adpater)
+	{
+		
+		 Log.i("hihihihih", "boo hoo"+"  10");
+			 animationAdapter = new AlphaInAnimationAdapter(
+					adapter);
+			 stickyListHeadersAdapterDecorator = new StickyListHeadersAdapterDecorator(
+					animationAdapter);
+			stickyListHeadersAdapterDecorator
+					.setListViewWrapper(new StickyListHeadersListViewWrapper(
+							listView));
+			assert animationAdapter.getViewAnimator() != null;
+			animationAdapter.getViewAnimator().setInitialDelayMillis(500);
+			assert stickyListHeadersAdapterDecorator.getViewAnimator() != null;
+			stickyListHeadersAdapterDecorator.getViewAnimator()
+					.setInitialDelayMillis(500);
+			listView.setAdapter(stickyListHeadersAdapterDecorator);
+			
+			((ActionBarActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+}

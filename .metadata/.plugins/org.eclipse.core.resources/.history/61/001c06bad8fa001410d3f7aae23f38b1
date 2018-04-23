@@ -1,0 +1,110 @@
+package com.csform.android.uiapptemplate;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.view.Window;
+import android.widget.ImageView;
+import android.widget.TextView;
+public class ParticularInfoOnMap extends ActionBarActivity{
+	String image0;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.particular_info_on_map);
+		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		Bundle b=getIntent().getExtras();
+		Double lat=b.getDouble("lat");
+		Double lon=b.getDouble("lng");
+		image0=b.getString("image0");
+	String title=b.getString("title");
+        String description=b.getString("description");
+        String address=b.getString("address");
+        String dateoccured=b.getString("date_occured");
+        String crimetype=b.getString("type_name");
+        String user=b.getString("user_login");
+       
+    
+        
+         
+        
+        
+        
+        
+        TextView type = (TextView) findViewById(R.id.crime_type);
+        // Getting reference to the TextView to set longitude
+        TextView desc = (TextView)findViewById(R.id.crime_description);
+        TextView address1 = (TextView) findViewById(R.id.crime_address);
+        // Getting reference to the TextView to set longitude
+        TextView date = (TextView) findViewById(R.id.crime_date_occured);
+        TextView  userTextView= (TextView) findViewById(R.id.crime_user);
+        TextView titleTextView = (TextView) findViewById(R.id.crime_title);
+       // ImageView image=(ImageView)findViewById(R.id.crime_image);
+       
+        // Setting the latitude
+        titleTextView.setText(title);
+        userTextView.setText(user);
+        // Setting the longitude
+        desc.setText(description);
+        address1.setText(address);
+        date.setText(dateoccured);
+        type.setText(crimetype);
+        
+     
+	}
+	
+	public void retrieveImage(){
+   new AsyncTask<String, Void, Bitmap> ()
+    {
+    	String url;
+    	
+    	
+    	@Override
+    	protected void onPreExecute() {
+    		// TODO Auto-generated method stub
+    		url=image0;
+    		super.onPreExecute();
+    	}
+        protected Bitmap doInBackground(String... args) {
+        	
+            URL newurl = null;
+            try {
+                newurl = new URL(url);
+                
+            } catch (MalformedURLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            Bitmap mIcon_val = null;
+            try {
+                mIcon_val = BitmapFactory.decodeStream(newurl.openConnection() .getInputStream());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return mIcon_val;
+        }
+        //@Override
+        protected void onPostExecute(Bitmap result1) 
+        {
+            ImageView mImageView = (ImageView) findViewById(R.id.crime_image);
+            mImageView.setImageBitmap(result1);
+        };
+    
+    
+    };
+	}
+
+}

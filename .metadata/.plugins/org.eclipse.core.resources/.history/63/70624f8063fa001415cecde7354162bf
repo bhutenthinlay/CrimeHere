@@ -1,0 +1,332 @@
+/*
+ * Copyright 2014 Niek Haarman
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.csform.android.uiapptemplate.adapter;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
+import android.content.Context;
+import android.database.Cursor;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.csform.android.uiapptemplate.DatabaseOperations;
+import com.csform.android.uiapptemplate.ListViewFragment;
+import com.csform.android.uiapptemplate.R;
+import com.csform.android.uiapptemplate.util.ImageUtil;
+import com.google.android.gms.internal.my;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.nhaarman.listviewanimations.ArrayAdapter;
+
+public class MyStickyListHeadersAdapter extends ArrayAdapter<String> implements
+		StickyListHeadersAdapter {
+
+
+	static private ArrayList<HashMap<String, String>> mylist;
+	
+	private final Context mContext;
+	private LayoutInflater mInflater;
+
+	ArrayList<Integer> crimeTypeCount = new ArrayList<Integer>();
+	ArrayList<Integer> headerPosition = new ArrayList<Integer>();
+	ArrayList<String> crimeTypeName = new ArrayList<String>();
+	static ArrayList<String> crime = new ArrayList<String>();
+	private int count = 0;
+	int header;
+
+	public MyStickyListHeadersAdapter(final Context context, double bottom,
+			double top, double left, double right) {
+		mylist = new ArrayList<HashMap<String, String>>();
+		mContext = context;
+		mInflater = (LayoutInflater) mContext
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		DatabaseOperations dop = new DatabaseOperations(context);
+	
+	
+		
+			try {
+			clear();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		Log.i("hihi", "boho int" + bottom);
+		/*
+		 * for (int i = 0; i < crime.size(); i++) {
+		 * 
+		 * }
+		 */
+	
+		for (int i = 0; i <mylist.size() ; i++) {
+		//for (int i = 0; i < ; i++) {
+			String id = mylist.get(i).get("id");
+			String identifier = mylist.get(i).get("identifier");
+			String title = mylist.get(i).get("title");
+			String description = mylist.get(i).get("description");
+			String type_name = mylist.get(i).get("type_name");
+			String address = mylist.get(i).get("address");
+			double lat = Double.parseDouble(mylist.get(i).get("lat"));
+			double lng = Double.parseDouble(mylist.get(i).get("lng"));
+			String image0 = mylist.get(i).get("image0");
+			String image1 = mylist.get(i).get("image1");
+			String image2 = mylist.get(i).get("image2");
+			String user_login = mylist.get(i).get("user_login");
+			String date_occured = mylist.get(i).get("date_occured");
+
+			add(id+" "+type_name+" "+description);
+
+		}
+
+	}
+
+	public MyStickyListHeadersAdapter(ListViewFragment listViewFragment) {
+		// TODO Auto-generated constructor stub
+		mContext = listViewFragment.getActivity();
+		mInflater = (LayoutInflater) mContext
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		for (int i = 0; i < 1000; i++) {
+			add("Row number " + i);
+		}
+	}
+
+	@Override
+	public long getItemId(final int position) {
+		return getItem(position).hashCode();
+	}
+
+	@Override
+	public boolean hasStableIds() {
+		return true;
+	}
+
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		final ViewHolder holder;
+		if (convertView == null) {
+			convertView = mInflater.inflate(R.layout.list_item_default, parent,
+					false);
+			holder = new ViewHolder();
+			holder.image = (ImageView) convertView.findViewById(R.id.image);
+			holder.text = (TextView) convertView.findViewById(R.id.text);
+			holder.icon = (TextView) convertView.findViewById(R.id.icon);
+			convertView.setTag(holder);
+		} else {
+			holder = (ViewHolder) convertView.getTag();
+		}
+
+		// TODO Change image URL
+		ImageUtil.displayRoundImage(holder.image, "", null);
+		holder.text.setText(getItem(position));
+
+		return convertView;
+	}
+
+	private static class ViewHolder {
+		public ImageView image;
+		public/* Roboto */TextView text;
+		public/* Fontello */TextView icon;
+	}
+
+	@Override
+	public View getHeaderView(final int position, final View convertView,
+			final ViewGroup parent) {
+		TextView view = (TextView) convertView;
+		if (view == null) {
+			view = (TextView) LayoutInflater.from(mContext).inflate(
+					R.layout.list_header, parent, false);
+		}
+
+		try {
+			view.setText("Crimes");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return view;
+	}
+
+	@Override
+	public long getHeaderId(final int position) {
+		return 0;
+				}
+	
+	
+	private void getCrime(final double a, final double b, final double c,
+			final double d) {
+		// TODO Auto-generated method stub
+		new AsyncTask<Void, Long, Boolean>() {
+
+			Boolean status;
+			String url;
+
+			protected void onPreExecute() {
+
+				url =mContext.getResources().getString(R.string.URL_ShowItem);
+
+			};
+
+			protected void onPostExecute(Boolean result) {
+				
+
+				for (int i = 0; i < mylist.size(); i++) {
+					
+										// .setSnippet(CR.getString(3)
+
+					
+					try{
+					//dop.putInformation(dop, id, identifier, title, description, type_name, address, lat, lng, image0, image1, image2, user_login, date_occured);
+					}catch(Exception ex)
+					{
+						
+					}
+				}
+
+			};
+
+			@Override
+			protected Boolean doInBackground(Void... added_item) {
+				// TODO Auto-generated method stub
+				status = retrieveData(url, a, b, c, d);
+				return status;
+			}
+
+		}.execute(null, null, null);
+
+	}
+
+	protected Boolean retrieveData(String url, double a, double b, double c,
+			double d) {
+		// TODO Auto-generated method stub
+		SSLContext ctx = null;
+		try {
+			ctx = SSLContext.getInstance("TLS");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			ctx.init(null, new TrustManager[] { new X509TrustManager() {
+				public void checkClientTrusted(X509Certificate[] chain,
+						String authType) {
+				}
+
+				public void checkServerTrusted(X509Certificate[] chain,
+						String authType) {
+				}
+
+				public X509Certificate[] getAcceptedIssuers() {
+					return new X509Certificate[] {};
+				}
+			} }, null);
+		} catch (KeyManagementException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				// TODO Auto-generated method stub
+				return true;
+			}
+
+		});
+		HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+		HttpEntity httpEntity = null;
+		// TODO Auto-generated method stub
+		try {
+
+			final List<NameValuePair> params = new ArrayList<NameValuePair>();
+			params.add(new BasicNameValuePair("a", String.valueOf(a)));
+			params.add(new BasicNameValuePair("b", String.valueOf(b)));
+			params.add(new BasicNameValuePair("c", String.valueOf(c)));
+			params.add(new BasicNameValuePair("d", String.valueOf(d)));
+			DefaultHttpClient httpClient = new DefaultHttpClient();
+			HttpPost httpPost = new HttpPost(url);
+			httpPost.setEntity(new UrlEncodedFormEntity(params));
+			HttpResponse httpResponse = httpClient.execute(httpPost);
+			httpEntity = httpResponse.getEntity();
+			String entityResponse = EntityUtils.toString(httpEntity);
+			Log.e("entity response", entityResponse);
+
+			JSONArray jArray = new JSONArray(entityResponse);
+			if (jArray.length() < 1) {
+				return false;
+			} else {
+				for (int i = 0; i < jArray.length(); i++) {
+					HashMap<String, String> map = new HashMap<String, String>();
+					JSONObject e = jArray.getJSONObject(i);
+					map.put("id", e.getString("id"));
+					map.put("identifier", e.getString("identifier"));
+					map.put("title", e.getString("title"));
+					map.put("description", e.getString("description"));
+					map.put("type_name", e.getString("type_name"));
+					map.put("address", e.getString("address"));
+					map.put("lat", e.getString("lat"));
+					map.put("lng", e.getString("lng"));
+					map.put("image0", e.getString("image0"));
+					map.put("image1", e.getString("image1"));
+					map.put("image2", e.getString("image2"));
+					map.put("user_login", e.getString("user_login"));
+					map.put("date_occured", e.getString("date_occured"));
+
+					mylist.add(map);
+				}
+
+				return true;
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return false;
+
+		}
+
+	}
+
+	
+
+	
+}

@@ -1,0 +1,6 @@
+package com.csform.android.uiapptemplate;
+
+public interface Communicate {
+	public void sendData(String data);
+
+}

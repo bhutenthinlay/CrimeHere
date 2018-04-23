@@ -1,0 +1,26 @@
+/*
+ * this class contain information of database 
+ */
+package com.csform.android.uiapptemplate;
+
+import android.provider.BaseColumns;
+
+public class TableData {
+
+	public TableData()
+	{
+
+	}
+
+	public static abstract class TableInfo implements BaseColumns
+	{
+		public static final String NAME="name";
+		public static final String DEVICE_NAME="device_name";
+		public static final String DEVICE_ADDRESS="device_address";
+		public static final String DATABASE_NAME="device_info";
+		public static final String TABLE_NAME="bluetooth_info";
+		public static final String DEVICE_GPS_LONG="gps_lon";
+		public static final String DEVICE_GPS_LAT="gps_lat";
+	}
+
+}

@@ -1,0 +1,330 @@
+package com.csform.android.uiapptemplate;
+
+import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.google.android.gms.internal.mm;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import android.content.Intent;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MapFragment extends Fragment implements OnMapLongClickListener,
+		LocationListener {
+	public static final String LOCATION_SERVICE = "location";
+
+	double lat, lon;
+	String latString, lonString;
+	String markerString;
+	LatLng latlng;
+	TextView textviewMap;
+	Boolean longpress = true;
+	LocationManager locationManager;
+
+	ProgressBar progressBarMapFragmentDetail;
+	static public ArrayList<HashMap<String, String>> mylist;
+	MapFragment(boolean longpress) {
+		this.longpress = longpress;
+	}
+
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		
+
+		mylist = new ArrayList<HashMap<String, String>>();
+		UserSessionManager session = new UserSessionManager(getActivity());
+		View v = inflater.inflate(R.layout.map_fragment, container, false);
+		progressBarMapFragmentDetail = (ProgressBar) v
+				.findViewById(R.id.progressBarMapFragmentDetail);
+		textviewMap = (TextView) v.findViewById(R.id.textView1);
+		final GoogleMap mMap = ((SupportMapFragment) this.getChildFragmentManager()
+				.findFragmentById(R.id.mapid)).getMap();
+
+		locationManager = (LocationManager) getActivity().getSystemService(
+				LOCATION_SERVICE);
+		Location location = locationManager
+				.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		mMap.getUiSettings().setMapToolbarEnabled(false);
+
+		if (longpress) {
+			textviewMap.setText("Long press at location to report a crime");
+			mMap.setOnMapLongClickListener(this);
+			textviewMap.setText("Long press to submit a Tips");
+			markerString = "your current location";
+		}
+
+		else {
+			textviewMap.setText("Crime scene");
+			markerString = "crime scene";
+
+		}
+		if (mMap == null) {
+			Toast.makeText(getActivity(), "something wrong with google map",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			try {
+				lat = location.getLatitude();
+				lon = location.getLongitude();
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						;
+			} catch (Exception ex) {
+				
+				try
+				{
+					 mMap.setMyLocationEnabled(true);
+			            // Check if we were successful in obtaining the map.
+			            if (mMap != null) {
+
+
+			             mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+
+			           @Override
+			           public void onMyLocationChange(Location arg0) {
+			            // TODO Auto-generated method stub
+
+			        	   lat=arg0.getLatitude();
+			        	   lon=arg0.getLongitude();
+			        	   latlng=new LatLng(lat, lon);
+			             mMap.addMarker(new MarkerOptions().position(new LatLng(arg0.getLatitude(), arg0.getLongitude())).title("My current Location"));
+			             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15f));
+			           }
+			          });
+			            }
+					
+				}catch(Exception ex1)
+				{
+				Log.e("lat n lon",
+						String.valueOf(lat) + "    " + String.valueOf(lon));
+				lat = 24.821387;
+				lon = 78.060060;
+				markerString="unable to locate exactly";
+				LatLng latlng = new LatLng(lat, lon);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 6f));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng).title(markerString))
+						;
+				
+				}
+			}
+			
+		}
+
+		return v;
+	}
+
+	@Override
+	public void onMapLongClick(LatLng arg0) {
+		
+		getCategory(arg0.latitude,arg0.longitude);
+		
+		
+		// TODO Auto-generated method stub
+		/*
+		 * Intent i = new Intent(getActivity(), Add_item.class); Bundle bundle =
+		 * new Bundle();
+		 * 
+		 * // Add your data to bundle bundle.putString("lat",
+		 * String.valueOf(arg0.latitude)); bundle.putString("lon",
+		 * String.valueOf(arg0.longitude));
+		 * 
+		 * // Add the bundle to the intent i.putExtras(bundle);
+		 * startActivity(i); getActivity().finish();
+		 */}
+
+	private void getCategory(final double lat1,final double lon1) {
+		// TODO Auto-generated method stub
+	
+		new AsyncTask<Void, Long, Boolean>() {
+
+			 Boolean status;	
+			String url;
+
+			protected void onPreExecute() {
+
+				url = getResources().getString(R.string.URL_GET_CATEGORY);
+				
+
+
+			};
+
+			protected void onPostExecute(Boolean result) {
+
+				if(result)
+				{
+					
+					
+				for (int i = 0; i < mylist.size(); i++) {
+					String id = mylist.get(i).get("type_id");
+					String type_name = mylist.get(i).get("type_name");
+					Log.i("type nam", id+"  "+type_name);
+					}
+				Intent i = new Intent(getActivity(), Add_item.class);
+				Bundle b = new Bundle();
+				b.putString("lat", String.valueOf(lat1));
+				b.putString("lon", String.valueOf(lon1));
+				i.putExtras(b);
+				startActivity(i);			
+				}
+				else
+				{
+					Toast.makeText(getActivity(), "couldnot retrieve category", 0).show();
+				}
+							
+			};
+
+			@Override
+			protected Boolean doInBackground(Void... added_item) {
+				// TODO Auto-generated method stub
+				status = retrieveData(url);
+				return status;
+			}
+
+		}.execute(null, null, null);
+		
+
+
+	}
+
+	protected Boolean retrieveData(String url) {
+		// TODO Auto-generated method stub
+		SSLContext ctx = null;
+		try {
+			ctx = SSLContext.getInstance("TLS");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			ctx.init(null, new TrustManager[] { new X509TrustManager() {
+				public void checkClientTrusted(X509Certificate[] chain,
+						String authType) {
+				}
+
+				public void checkServerTrusted(X509Certificate[] chain,
+						String authType) {
+				}
+
+				public X509Certificate[] getAcceptedIssuers() {
+					return new X509Certificate[] {};
+				}
+			} }, null);
+		} catch (KeyManagementException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				// TODO Auto-generated method stub
+				return true;
+			}
+
+		});
+		HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory());
+		HttpEntity httpEntity = null;
+		// TODO Auto-generated method stub
+		try {
+
+			HttpClient httpclient = new DefaultHttpClient();
+
+			HttpGet request = new HttpGet();
+			URI website = new URI(url);
+			request.setURI(website);
+			HttpResponse response = httpclient.execute(request);
+			String json = null;
+			if (response.getStatusLine().getStatusCode() == 200) {
+				HttpEntity entity = response.getEntity();
+				json = EntityUtils.toString(entity);
+			}
+			JSONArray jArray = new JSONArray(json);
+			if (jArray.length() < 1) {
+				return false;
+			} else {
+				for (int i = 0; i < jArray.length(); i++) {
+					HashMap<String, String> map = new HashMap<String, String>();
+					JSONObject e = jArray.getJSONObject(i);
+					map.put("type_id", e.getString("type_id"));
+					map.put("type_name", e.getString("type_name"));
+					mylist.add(map);
+				}
+
+				return true;
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return false;
+
+		}
+
+	}
+
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

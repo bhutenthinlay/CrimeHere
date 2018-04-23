@@ -1,0 +1,424 @@
+package com.csform.android.uiapptemplate;
+
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnCameraChangeListener;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.VisibleRegion;
+
+/**
+ * A simple {@link Fragment} subclass. Use the
+ * {@link GoogleMapFragment#newInstance} factory method to create an instance of
+ * this fragment.
+ */
+public class GoogleMapFragment extends Fragment implements
+		OnCameraChangeListener, AdapterView.OnItemSelectedListener,
+		com.google.android.gms.maps.GoogleMap.OnMarkerClickListener,
+		OnMapLongClickListener {
+	// TODO: Rename parameter arguments, choose names that match
+	// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+	static UserSessionManager session;
+	static private ArrayList<HashMap<String, String>> mylist;
+	GoogleMap mMap;
+	double lat, lon, lat12, lon12;
+	static JSONArray jArray;
+	static String entityResponse;
+	VisibleRegion vr;
+	String markerString;
+	ProgressBar progressBarMapFragmentDetail;
+	String searchAddress = null;
+
+	Location location1 = null;
+
+	double left, right, top, bottom;
+
+	/**
+	 * Use this factory method to create a new instance of this fragment using
+	 * the provided parameters.
+	 * 
+	 * @param //param1 Parameter 1.
+	 * @param //param2 Parameter 2.
+	 * @return A new instance of fragment GoogleMap.
+	 */
+	// TODO: Rename and change types and number of parameters
+
+	public GoogleMapFragment(String searchAddress) {
+		this.searchAddress = searchAddress;
+
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		if (savedInstanceState != null) {
+			this.searchAddress = savedInstanceState.getString("searchAddress");
+
+		}
+
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		// Inflate the layout for this fragment
+		// return inflater.inflate(R.layout.google_map, container, false);
+		if (savedInstanceState != null) {
+
+			searchAddress = savedInstanceState.getString("searchAddress");
+			Log.e("searchAddress", searchAddress);
+		}
+		
+		View v = inflater.inflate(R.layout.map_fragment_detail, container,
+				false);
+
+		progressBarMapFragmentDetail=(ProgressBar) v.findViewById(R.id.progressBarMapFragmentDetail);
+		mylist = new ArrayList<HashMap<String, String>>();
+		LocationManager_check locationManagerCheck = new LocationManager_check(
+				getActivity());
+		mMap = ((SupportMapFragment) this.getChildFragmentManager()
+				.findFragmentById(R.id.mapfragmentid)).getMap();
+
+		// india location
+		LatLng latlng = new LatLng(24.821387, 78.060060);
+
+		if (locationManagerCheck.isLocationServiceAvailable()) {
+
+			if (locationManagerCheck.getProviderType() == 1)
+
+				location1 = locationManagerCheck.locationManager
+						.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			else if (locationManagerCheck.getProviderType() == 2)
+				location1 = locationManagerCheck.locationManager
+						.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			markerString = "your current location";
+			if (searchAddress == null) {
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
+						location1.getLatitude(), location1.getLongitude()), 15));
+				lat = location1.getAltitude();
+				lon = location1.getLongitude();
+				
+				session = new UserSessionManager(getActivity());
+				session.setLastLocation(String.valueOf(lat),
+						String.valueOf(lon));
+
+			} else {
+				Geocoder coder = new Geocoder(getActivity());
+				try {
+					ArrayList<Address> adresses = (ArrayList<Address>) coder
+							.getFromLocationName(searchAddress, 1);
+					for (Address add : adresses) {
+
+						double longitude = add.getLongitude();
+						double latitude = add.getLatitude();
+
+						mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+								new LatLng(latitude, longitude), 7));
+					
+						mMap.addMarker(
+								new MarkerOptions().position(new LatLng(latitude, longitude)).title("your searched location: " + searchAddress))
+								.showInfoWindow();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+							new LatLng(24.821387, 78.060060), 5));
+
+					mMap.addMarker(
+							new MarkerOptions().position(new LatLng(24.821387,78.060060)).title("cannot searched location: " + searchAddress))
+							.showInfoWindow();
+					
+					
+				}
+			}
+		} else {
+
+			locationManagerCheck.createLocationServiceError(getActivity());
+		}
+
+		progressBarMapFragmentDetail = (ProgressBar) v
+				.findViewById(R.id.progressBarMapFragmentDetail);
+		mMap.getUiSettings().setRotateGesturesEnabled(false);
+		mMap.getUiSettings().setMapToolbarEnabled(false);
+		mMap.setOnMarkerClickListener(new com.google.android.gms.maps.GoogleMap.OnMarkerClickListener() {
+			@Override
+			public boolean onMarkerClick(Marker marker) {
+				// do nothing
+				return false;
+			}
+		});
+
+		// mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 4.5f));
+
+		mMap.setOnCameraChangeListener(this);
+		vr = mMap.getProjection().getVisibleRegion();
+
+		left = vr.latLngBounds.southwest.longitude;
+		top = vr.latLngBounds.northeast.latitude;
+		right = vr.latLngBounds.northeast.longitude;
+		bottom = vr.latLngBounds.southwest.latitude;
+		try {
+
+			lat = location1.getLatitude();
+			lon = location1.getLongitude();
+
+			session = new UserSessionManager(getActivity());
+			session.setLastLocation(String.valueOf(lat), String.valueOf(lon));
+
+		} catch (Exception ex) {
+			mMap.setMyLocationEnabled(true);
+			markerString = "could not set to your current location ";
+			ex.printStackTrace();
+			Toast.makeText(getActivity(),
+					"problem occur while getting current location",
+					Toast.LENGTH_LONG).show();
+		}
+		latlng = new LatLng(lat, lon);
+		if (mMap == null) {
+			Toast.makeText(getActivity(), "something wrong with google map",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			mMap.addMarker(
+					new MarkerOptions().position(latlng).title(markerString))
+					;
+			// mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlng, 15));
+		}
+
+		getCrime(bottom, top, left, right);
+		return v;
+
+	}
+
+	private void getCrime(final double a, final double b, final double c,
+			final double d) {
+		// TODO Auto-generated method stub
+		new AsyncTask<Void, Long, Boolean>() {
+
+			Boolean status;
+	
+
+			protected void onPreExecute() {
+
+			};
+
+			protected void onPostExecute(Boolean result) {
+				for(int i=0;i<mylist.size();i++)
+				{
+				LatLng latlng=new LatLng(Double.parseDouble(mylist.get(i).get("lat")), Double.parseDouble(mylist.get(i).get("lng")));
+				mMap.addMarker(
+						new MarkerOptions().position(latlng)
+						.title(mylist.get(i).get("title"))
+						.snippet(mylist.get(i).get("description")+" "+mylist.get(i).get("date_occured")));
+						
+						//.setSnippet(CR.getString(3)
+				
+				}
+							};
+
+			@Override
+			protected Boolean doInBackground(Void... added_item) {
+				// TODO Auto-generated method stub
+				status = retrieveData(a,b,c,d);
+				return status;
+			}
+
+		}.execute(null,null,null);
+		
+	}
+
+	protected Boolean retrieveData(double a, double b, double c, double d) {
+		// TODO Auto-generated method stub
+
+		DatabaseOperations dop = new DatabaseOperations(getActivity());
+		Cursor CR = dop.getInformation(dop, a, b, c, d);
+		if (CR.moveToFirst()) {
+			CR.moveToFirst();
+			do {
+
+				Log.e("database", CR.getString(2));
+				HashMap<String, String> map = new HashMap<String, String>();
+				map.put("id", CR.getString(0));
+				map.put("identifier", CR.getString(1));
+				map.put("title", CR.getString(2));
+				map.put("description", CR.getString(3));
+				map.put("type_name", CR.getString(4));
+				map.put("address", CR.getString(5));
+				map.put("lat", CR.getString(6));
+				map.put("lng", CR.getString(7));
+				map.put("image0", CR.getString(8));
+				map.put("image1", CR.getString(9));
+				map.put("image2", CR.getString(10));
+				map.put("user_login", CR.getString(11));
+				map.put("date_occured", CR.getString(12));
+
+				mylist.add(map);
+
+			} while (CR.moveToNext());
+		}
+		CR.close();
+		dop.close();
+		return true;
+	}
+
+	@Override
+	public void onCameraChange(CameraPosition arg0) {
+		// TODO Auto-generated method stub
+		vr = mMap.getProjection().getVisibleRegion();
+		left = vr.latLngBounds.southwest.longitude;
+		top = vr.latLngBounds.northeast.latitude;
+		right = vr.latLngBounds.northeast.longitude;
+		bottom = vr.latLngBounds.southwest.latitude;
+		Log.i("google zoooooom", String.valueOf(left));
+		Log.i("google zoooooom", String.valueOf(arg0.zoom));
+		getCrime(bottom, top, left, right);
+
+	}
+
+	@Override
+	public boolean onMarkerClick(Marker marker) {
+		return false;
+	}
+
+	public class LocationManager_check {
+
+		LocationManager locationManager;
+		Boolean locationServiceBoolean = false;
+		int providerType = 0;
+		AlertDialog alert;
+
+		public LocationManager_check(Context context) {
+			locationManager = (LocationManager) context
+					.getSystemService(Context.LOCATION_SERVICE);
+			boolean gpsIsEnabled = locationManager
+					.isProviderEnabled(LocationManager.GPS_PROVIDER);
+			boolean networkIsEnabled = locationManager
+					.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+			if (networkIsEnabled == true && gpsIsEnabled == true) {
+				locationServiceBoolean = true;
+				providerType = 1;
+
+			} else if (networkIsEnabled != true && gpsIsEnabled == true) {
+				locationServiceBoolean = true;
+				providerType = 2;
+
+			} else if (networkIsEnabled == true && gpsIsEnabled != true) {
+				locationServiceBoolean = true;
+				providerType = 1;
+			}
+
+		}
+
+		public Boolean isLocationServiceAvailable() {
+			return locationServiceBoolean;
+		}
+
+		public int getProviderType() {
+			return providerType;
+		}
+
+		public void createLocationServiceError(final Activity activityObj) {
+
+			// show alert dialog if Internet is not connected
+			AlertDialog.Builder builder = new AlertDialog.Builder(activityObj);
+
+			builder.setMessage(
+					"You need to activate location service to use this feature. Please turn on network or GPS mode in location settings")
+					.setTitle("Turn On")
+					.setCancelable(false)
+					.setPositiveButton("Settings",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									Intent intent = new Intent(
+											Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+									activityObj.startActivity(intent);
+									alert.dismiss();
+								}
+							})
+					.setNegativeButton("Cancel",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									alert.dismiss();
+								}
+							});
+			alert = builder.create();
+			alert.show();
+		}
+
+	}
+
+	@Override
+	public void onItemSelected(AdapterView<?> parent, View view, int position,
+			long id) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> parent) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onMapLongClick(LatLng arg0) {
+		// TODO Auto-generated method stub
+		Toast.makeText(getActivity(), "clicked", 0).show();
+	}
+
+}
